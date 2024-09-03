@@ -2,6 +2,7 @@ package paquetes;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.json.JSONObject;
 
@@ -16,31 +17,31 @@ import watchtogether.Cliente;
 
 public class PacketDispacher {
 
-	private Map<String, Class<? extends Packet>> paquetes = new HashMap<>();
+	private Map<String, Supplier<Packet>> paquetes = new HashMap<>();
 
 	public PacketDispacher() {
 		registerPackets();
 	}
 
-	private void registerPacket(String name, Class<? extends Packet> packetClass) {
+	private void registerPacket(String name, Supplier<Packet> packetClass) {
 		paquetes.put(name, packetClass);
 	}
 
 	private void registerPackets() {
 		//AQUI SE REGISTRAN LOS PAQUETES LOS CUALES PUEDE ENVIAR EL SERVER, LOS QUE ENVIA EL CLIENTE NO.
-		registerPacket("pause", PacketPause.class);
-		registerPacket("setmedia", PacketSetMedia.class);
-		registerPacket("settime", PacketSetTime.class);
-		registerPacket("ping", PacketPing.class);
-		registerPacket("startmedia", PacketStartMedia.class);
+		registerPacket("pause", PacketPause::new);
+		registerPacket("setmedia", PacketSetMedia::new);
+		registerPacket("settime", PacketSetTime::new);
+		registerPacket("ping", PacketPing::new);
+		registerPacket("startmedia", PacketStartMedia::new);
 	}
 
 	public void dispachPacket(String data, Cliente jugador) {
 		try {
 			JSONObject jsonData = new JSONObject(data);
-			Class<? extends Packet> packetClass = paquetes.get(jsonData.getString("tipo"));
-			if (packetClass != null) {
-				Packet packet = packetClass.getDeclaredConstructor().newInstance();
+			String tipo = jsonData.getString("tipo");
+			if (paquetes.containsKey(tipo)) {
+				Packet packet = paquetes.get(tipo).get();
 				if (packet instanceof IPacket)
 					((IPacket) packet).handleData(jsonData,jugador);
 

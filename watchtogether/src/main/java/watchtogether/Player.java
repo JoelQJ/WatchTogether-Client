@@ -79,7 +79,7 @@ public class Player {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		frame = new JFrame("Hiiragi Utena comparte anime.");
+		frame = new JFrame("Hiiragi Utena comparte anime " + Main.version);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setSize(1300, 600);
 		frame.setIconImage(new ImageIcon(Player.class.getResource("resources/utena.png")).getImage());
@@ -316,7 +316,7 @@ public class Player {
 	private void loadSubtitleTracks() {
 		List<? extends TrackInfo> tracks = mediaPlayer.media().info().tracks();
 		subtitleTrackSelector.removeAllItems();
-
+		Info subLatinAmerican = null;
 		for (int i = 0; i < tracks.size(); i++) {
 			if (tracks.get(i) instanceof TextTrackInfo) {
 				TextTrackInfo track = (TextTrackInfo) tracks.get(i);
@@ -324,15 +324,25 @@ public class Player {
 				String description = track.description() == null ? idioma : track.description();
 
 				if (description != null && !description.isEmpty()) {
-					subtitleTrackSelector.addItem(new Info(i, description));
+					Info texto = new Info(i, description);
+					subtitleTrackSelector.addItem(texto);
+					if(subLatinAmerican == null && (description.toLowerCase().contains("latin") || description.toLowerCase().contains("spa") || description.toLowerCase().contains("european")))
+						subLatinAmerican = texto;
 				}
 			}
 		}
-
+		
+		
 		if (subtitleTrackSelector.getItemCount() > 0) {
-			subtitleTrackSelector.setSelectedIndex(0);
-			mediaPlayer.subpictures().setTrack(0);
+			if (subLatinAmerican != null) {
+				subtitleTrackSelector.setSelectedItem(subLatinAmerican);
+				mediaPlayer.subpictures().setTrack(subLatinAmerican.getIndice());
+			} else {
+				subtitleTrackSelector.setSelectedIndex(0);
+				mediaPlayer.subpictures().setTrack(0);
+			}
 		}
+		
 	}
 
 	private void loadAudioTracks() {
@@ -347,11 +357,13 @@ public class Player {
 
 				if (description != null && !description.isEmpty()) {
 					Info audio = new Info(i, description);
-					audioTrackSelector.addItem(audio);
-					if (description.toLowerCase().contains("ja") || description.toLowerCase().contains("jpn")
-							|| idioma.toLowerCase().contains("jpn")) {
+					
+					if (description.toLowerCase().contains("ja") || description.toLowerCase().contains("jpn") || idioma.toLowerCase().contains("jpn")) {
 						audioJapones = audio;
+						audioJapones.setNombre("Japonés - 日本語");
 					}
+					
+					audioTrackSelector.addItem(audio);
 				}
 			}
 		}

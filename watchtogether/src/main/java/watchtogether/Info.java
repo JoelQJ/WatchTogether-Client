@@ -7,7 +7,7 @@ public class Info {
 	
 	public Info(int indice, String nombre) {
 		this.indice = indice;
-		this.nombre =  String.format("%s - [%s]", nombre, indice);
+		setNombre(nombre);
 	}
 
 	public int getIndice() {
@@ -18,9 +18,13 @@ public class Info {
 		return nombre;
 	}
 	
+	public void setNombre(String nombre) {
+		this.nombre = String.format("%s - [%s]", nombre, this.indice);
+	}
+	
 	@Override
 	public String toString() {
-		// TODO Auto-generated method stub
+		
 		return nombre;
 	}
 	

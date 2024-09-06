@@ -326,7 +326,7 @@ public class Player {
 				if (description != null && !description.isEmpty()) {
 					Info texto = new Info(i, description);
 					subtitleTrackSelector.addItem(texto);
-					if(subLatinAmerican == null && (description.toLowerCase().contains("latin") || description.toLowerCase().contains("spa") || description.toLowerCase().contains("european")))
+					if(subLatinAmerican == null && !description.toLowerCase().contains("forced") && (description.toLowerCase().contains("latin") || description.toLowerCase().contains("spa") || description.toLowerCase().contains("european")))
 						subLatinAmerican = texto;
 				}
 			}

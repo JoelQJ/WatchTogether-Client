@@ -13,6 +13,7 @@ import paquetes.tipos.PacketPing;
 import paquetes.tipos.PacketSetMedia;
 import paquetes.tipos.PacketSetTime;
 import paquetes.tipos.PacketStartMedia;
+import paquetes.tipos.PacketTerminado;
 import watchtogether.Cliente;
 
 public class PacketDispacher {
@@ -34,6 +35,7 @@ public class PacketDispacher {
 		registerPacket("settime", PacketSetTime::new);
 		registerPacket("ping", PacketPing::new);
 		registerPacket("startmedia", PacketStartMedia::new);
+		registerPacket("terminated", PacketTerminado::new);
 	}
 
 	public void dispachPacket(String data, Cliente jugador) {

@@ -3,6 +3,7 @@ package paquetes.tipos;
 import org.json.JSONObject;
 
 import watchtogether.Cliente;
+import watchtogether.Main;
 
 public class PacketTerminado extends Packet {
 	
@@ -15,7 +16,7 @@ public class PacketTerminado extends Packet {
 	
 	@Override
 	public void handleData(JSONObject data, Cliente reproductor) {
-	
+		Main.player.terminar();
 	}
 
 	

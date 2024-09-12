@@ -211,7 +211,7 @@ public class Player {
 					public void finished(MediaPlayer mediaPlayer) {
 						Main.cliente.enviarPaquete(new PacketTerminado().toString());
 					}
-
+					
 					@Override
 					public void timeChanged(MediaPlayer mediaPlayer, long newTime) {
 						SwingUtilities.invokeLater(() -> {
@@ -282,6 +282,10 @@ public class Player {
 
 	}
 
+	public void terminar() {
+		setTime(mediaPlayer.status().length());
+	}
+	
 	public void setPausar(boolean pausar) {
 		SwingUtilities.invokeLater(() -> {
 			mediaPlayer.controls().setPause(pausar);

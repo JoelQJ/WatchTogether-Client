@@ -6,8 +6,6 @@ import watchtogether.Cliente;
 import watchtogether.Main;
 
 public class PacketStartMedia extends Packet {
-
-private boolean pausa;
 	
 	
 	public PacketStartMedia() {
@@ -21,13 +19,5 @@ private boolean pausa;
 		Main.player.setPlayPrimeraVez();
 	}
 
-	
-	@Override
-	public String toString() {
-		JSONObject prueba = new JSONObject();
-		prueba.put("tipo", "startmedia");
-		prueba.put("pause", pausa);
-		return prueba.toString();
-	} 
 	
 }

@@ -283,7 +283,8 @@ public class Player {
 	}
 
 	public void terminar() {
-		setTime(mediaPlayer.status().length());
+		setPlayPrimeraVez();
+		setTime(mediaPlayer.status().length()-10);
 	}
 	
 	public void setPausar(boolean pausar) {

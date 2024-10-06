@@ -116,9 +116,12 @@ public class Player {
 		volumenSlider.setMajorTickSpacing(10);
 		volumenSlider.setFocusable(false);
 		pauseButton = new JButton("Play");
-
 		subtitleTrackSelector = new JComboBox<>();
+		Info infoCalcular = new Info(-99,"XXXXXXXXXXXXXXXXXXXXXXXX");
+		subtitleTrackSelector.setPrototypeDisplayValue(infoCalcular);
 		audioTrackSelector = new JComboBox<>();
+		audioTrackSelector.setPrototypeDisplayValue(infoCalcular);
+
 
 		tiempo = new JLabel();
 
@@ -127,12 +130,11 @@ public class Player {
 		stopTimer = new Timer(1000 * 10, new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if (volumenSlider.getValueIsAdjusting() || timeSlider.getValueIsAdjusting()) {
+				if (volumenSlider.getValueIsAdjusting() || timeSlider.getValueIsAdjusting() || subtitleTrackSelector.isPopupVisible() || audioTrackSelector.isPopupVisible()) {
 					stopTimer.restart();
 					return;
 				}
 				controlsPanel.setVisible(false);
-				System.out.println("AAAAAY CHINGADO");
 				frame.setCursor(Toolkit.getDefaultToolkit().createCustomCursor(
 						new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB), new Point(0, 0), "InvisibleCursor"));
 				stopTimer.stop();
@@ -234,6 +236,7 @@ public class Player {
 						loadSubtitleTracks();
 						loadAudioTracks();
 						setupSlider();
+						controlsPanel.updateUI();
 						setPausar(true);
 						setTime(0);
 						Main.cliente.enviarPaquete(new PacketSetMedia().toString());
@@ -242,8 +245,10 @@ public class Player {
 
 				subtitleTrackSelector.addActionListener(ev -> {
 					Info selectedInfo = (Info) subtitleTrackSelector.getSelectedItem();
-					if (selectedInfo != null)
+					if (selectedInfo != null )
 						mediaPlayer.subpictures().setTrack(selectedInfo.getIndice());
+					
+						
 				});
 
 				audioTrackSelector.addActionListener(ev -> {
@@ -321,6 +326,7 @@ public class Player {
 	private void loadSubtitleTracks() {
 		List<? extends TrackInfo> tracks = mediaPlayer.media().info().tracks();
 		subtitleTrackSelector.removeAllItems();
+		subtitleTrackSelector.addItem(new Info(-1, "Desactivar Subtitulos"));
 		Info subLatinAmerican = null;
 		for (int i = 0; i < tracks.size(); i++) {
 			if (tracks.get(i) instanceof TextTrackInfo) {
@@ -347,7 +353,6 @@ public class Player {
 				mediaPlayer.subpictures().setTrack(0);
 			}
 		}
-		
 	}
 
 	private void loadAudioTracks() {
@@ -387,6 +392,7 @@ public class Player {
 	private void setupSlider() {
 		timeSlider.setMaximum((int) mediaPlayer.status().length());
 		timeSlider.setValue((int) mediaPlayer.status().time());
+
 
 	}
 

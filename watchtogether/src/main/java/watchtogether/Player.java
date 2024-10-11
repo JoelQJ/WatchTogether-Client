@@ -117,7 +117,7 @@ public class Player {
 		volumenSlider.setFocusable(false);
 		pauseButton = new JButton("Play");
 		subtitleTrackSelector = new JComboBox<>();
-		Info infoCalcular = new Info(-99,"XXXXXXXXXXXXXXXXXXXXXXXX");
+		Info infoCalcular = new Info(-99,"XXXXXXXXXXXXXXXXXXXXXXXXX");
 		subtitleTrackSelector.setPrototypeDisplayValue(infoCalcular);
 		audioTrackSelector = new JComboBox<>();
 		audioTrackSelector.setPrototypeDisplayValue(infoCalcular);
@@ -239,6 +239,8 @@ public class Player {
 						controlsPanel.updateUI();
 						setPausar(true);
 						setTime(0);
+						volumenSlider.repaint();
+						mediaPlayer.audio().setVolume(volumenSlider.getValue());
 						Main.cliente.enviarPaquete(new PacketSetMedia().toString());
 					}
 				});

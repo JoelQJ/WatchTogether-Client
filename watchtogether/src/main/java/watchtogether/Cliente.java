@@ -21,6 +21,7 @@ public class Cliente {
 	private DataInputStream in;
 	private Socket socket;
 	private ExecutorService executor = Executors.newFixedThreadPool(10);
+	private Rsa criptografia = new Rsa();
 	private static PacketDispacher packetDispacher;
 	public Cliente(String ip, int puerto) {
 		this.ip = ip;
@@ -63,7 +64,7 @@ public class Cliente {
 		        };
 
 		        // Programa la tarea para que se ejecute cada 5 segundos
-		        long delay = 0; // Tiempo inicial antes de que la tarea se ejecute por primera vez
+		        long delay = 1000*25; // Tiempo inicial antes de que la tarea se ejecute por primera vez
 		        long period = 1000*60; // Periodo entre ejecuciones en milisegundos (5 segundos)
 
 		        timer.scheduleAtFixedRate(task, delay, period);
@@ -78,7 +79,7 @@ public class Cliente {
 
 		
 		try {
-			out.writeUTF(data+"^");
+			out.writeUTF(criptografia.estaLaClavePublicaDelServidor() ? criptografia.encriptarConClavePublicaServidor(data+"^") : data);
 			out.flush();
 		} catch (IOException e) {
 			desconectar();
@@ -92,14 +93,23 @@ public class Cliente {
 	
 	private void leer() {
 		try {
+			enviarPaquete(String.format("publicKey:%s",criptografia.getPublicKeyEncoded()));
 			while (!socket.isClosed()) {
 				
 				String paqueteRecibido = in.readUTF();
-				if(paqueteRecibido.charAt(0) == '{')
-					Cliente.packetDispacher.dispachPacket(paqueteRecibido, Cliente.this);
-				
-				System.out.println("[Cliente]: " + paqueteRecibido);
-				
+				if(paqueteRecibido.contains("publicKey:")) {
+					criptografia.cargarClavePublica(paqueteRecibido.split(":")[1]);
+					continue;
+					
+				}
+				if(criptografia.estaLaClavePublicaDelServidor()) {
+					String paqueteDescriptado = criptografia.desencriptar(paqueteRecibido);
+					if(paqueteDescriptado.charAt(0) == '{')
+						Cliente.packetDispacher.dispachPacket(paqueteDescriptado, Cliente.this);
+					
+					System.out.println("[Cliente]: " + paqueteDescriptado);
+
+					}
 			}
 			desconectar();
 		} catch (Exception e) {

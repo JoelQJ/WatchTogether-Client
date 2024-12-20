@@ -335,7 +335,7 @@ public class Player {
 				TextTrackInfo track = (TextTrackInfo) tracks.get(i);
 				String idioma = track.language() == null ? "" : track.language();
 				String description = track.description() == null ? idioma : track.description();
-
+				
 				if (description != null && !description.isEmpty()) {
 					Info texto = new Info(i, description);
 					subtitleTrackSelector.addItem(texto);
@@ -365,12 +365,12 @@ public class Player {
 			if (tracks.get(i) instanceof AudioTrackInfo) {
 				AudioTrackInfo track = (AudioTrackInfo) tracks.get(i);
 				String idioma = track.language() == null ? "" : track.language();
-				String description = track.description() == null ? idioma : track.description();
-
+				String description = track.description() == null || track.description().isEmpty() ? idioma : track.description();
 				if (description != null && !description.isEmpty()) {
 					Info audio = new Info(i, description);
 					
 					if (description.toLowerCase().contains("ja") || description.toLowerCase().contains("jpn") || idioma.toLowerCase().contains("jpn")) {
+						System.out.println("" + idioma + " "  + description);
 						audioJapones = audio;
 						audioJapones.setNombre("Japonés - 日本語");
 					}

@@ -7,11 +7,10 @@ import watchtogether.Main;
 
 public class PacketPause extends Packet {
 
-private boolean pausa;
+	private boolean pausa;
 	
 	
 	public PacketPause() {
-		// TODO Auto-generated constructor stub
 	}
 	
 	public PacketPause(boolean pausa) {

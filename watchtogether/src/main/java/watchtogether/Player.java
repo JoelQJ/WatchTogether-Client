@@ -16,6 +16,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.AbstractAction;
@@ -82,7 +83,7 @@ public class Player {
 		frame = new JFrame("Hiiragi Utena comparte anime " + Main.version);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setSize(1300, 600);
-		frame.setIconImage(new ImageIcon(Player.class.getResource("resources/utena.png")).getImage());
+		frame.setIconImage(new ImageIcon(Main.class.getResource("/utena.png")).getImage());
 
 	}
 
@@ -117,7 +118,7 @@ public class Player {
 		volumenSlider.setFocusable(false);
 		pauseButton = new JButton("Play");
 		subtitleTrackSelector = new JComboBox<>();
-		Info infoCalcular = new Info(-99,"XXXXXXXXXXXXXXXXXXXXXXXXX");
+		Info infoCalcular = new Info(-99,"XXXXXXXXXXXXXXXXXXXXXXXXXXXXX","");
 		subtitleTrackSelector.setPrototypeDisplayValue(infoCalcular);
 		audioTrackSelector = new JComboBox<>();
 		audioTrackSelector.setPrototypeDisplayValue(infoCalcular);
@@ -163,7 +164,7 @@ public class Player {
 
 		JPanel downPanel = new JPanel();
 		downPanel.add(pauseButton);
-		downPanel.add(new JLabel("Subtitles:"));
+		downPanel.add(new JLabel("Subs:"));
 		downPanel.add(subtitleTrackSelector);
 		downPanel.add(new JLabel("Audio:"));
 		downPanel.add(audioTrackSelector);
@@ -325,10 +326,12 @@ public class Player {
 		});
 	}
 
+
 	private void loadSubtitleTracks() {
 		List<? extends TrackInfo> tracks = mediaPlayer.media().info().tracks();
 		subtitleTrackSelector.removeAllItems();
-		subtitleTrackSelector.addItem(new Info(-1, "Desactivar Subtitulos"));
+		System.out.println("\n[Player] Cargando Subtitulos...");
+		subtitleTrackSelector.addItem(new Info(-1, "Desactivar Subtitulos",""));
 		Info subLatinAmerican = null;
 		for (int i = 0; i < tracks.size(); i++) {
 			if (tracks.get(i) instanceof TextTrackInfo) {
@@ -337,14 +340,18 @@ public class Player {
 				String description = track.description() == null ? idioma : track.description();
 				
 				if (description != null && !description.isEmpty()) {
-					Info texto = new Info(i, description);
+					Info texto = new Info(i, description, idioma);
 					subtitleTrackSelector.addItem(texto);
-					if(subLatinAmerican == null && !description.toLowerCase().contains("forced") && (description.toLowerCase().contains("latin") || description.toLowerCase().contains("spa") || description.toLowerCase().contains("european")))
-						subLatinAmerican = texto;
+					if(!description.toLowerCase().contains("commentary"))
+						if(subLatinAmerican == null && !description.toLowerCase().contains("forced") && comprobarIdiomaEnDesc(description, idioma, "latin","spa","european"))
+							subLatinAmerican = texto;
+					String debugTexto = subLatinAmerican == texto ? String.format("%s <-- Elegido como Subtitulo", texto.debug()) : texto.debug();
+					System.out.println(debugTexto);
 				}
 			}
+			
 		}
-		
+		System.out.println("\n");
 		
 		if (subtitleTrackSelector.getItemCount() > 0) {
 			if (subLatinAmerican != null) {
@@ -357,29 +364,36 @@ public class Player {
 		}
 	}
 
+	private boolean comprobarIdiomaEnDesc(String desc, String idioma, String... esperados){
+		List<String> esperadosLista = Arrays.asList(esperados);
+		return esperadosLista.contains(desc.toLowerCase()) || esperadosLista.contains(idioma.toLowerCase());
+	}
+
 	private void loadAudioTracks() {
 		List<? extends TrackInfo> tracks = mediaPlayer.media().info().tracks();
 		audioTrackSelector.removeAllItems();
 		Info audioJapones = null;
+		System.out.println("[Player] Cargando Audios...");
 		for (int i = 0; i < tracks.size(); i++) {
 			if (tracks.get(i) instanceof AudioTrackInfo) {
 				AudioTrackInfo track = (AudioTrackInfo) tracks.get(i);
 				String idioma = track.language() == null ? "" : track.language();
 				String description = track.description() == null || track.description().isEmpty() ? idioma : track.description();
 				if (description != null && !description.isEmpty()) {
-					Info audio = new Info(i, description);
-					
-					if (description.toLowerCase().contains("ja") || description.toLowerCase().contains("jpn") || idioma.toLowerCase().contains("jpn")) {
-						System.out.println("" + idioma + " "  + description);
-						audioJapones = audio;
-						audioJapones.setNombre("Japonés - 日本語");
-					}
-					
+					Info audio = new Info(i, description, idioma);
 					audioTrackSelector.addItem(audio);
+					if(!description.toLowerCase().contains("commentary"))
+						if(comprobarIdiomaEnDesc(description, idioma, "ja", "jpn")){
+							audioJapones = audio;
+							audioJapones.setNombre("Japonés - 日本語");
+						}
+					
+					String debugTexto = audioJapones == audio ? String.format("%s <-- Elegido como Audio", audio.debug()) : audio.debug();
+					System.out.println(debugTexto);
 				}
 			}
 		}
-
+		System.out.println("\n");
 		if (audioTrackSelector.getItemCount() > 0) {
 			if (audioJapones != null) {
 				audioTrackSelector.setSelectedItem(audioJapones);

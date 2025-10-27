@@ -1,14 +1,17 @@
 package watchtogether;
 
+import uk.co.caprica.vlcj.player.base.Track;
+
 public class Info {
 
 	private int indice;
 	private String nombre;
 	private String idioma;
-	
-	public Info(int indice, String nombre, String idioma) {
+	private Track track;
+	public Info(int indice, Track track, String nombre, String idioma) {
 		this.indice = indice;
 		this.idioma = idioma;
+		this.track = track;
 		setNombre(nombre);
 	}
 
@@ -16,6 +19,10 @@ public class Info {
 		return indice;
 	}
 
+	public Track getTrack() {
+		return track;
+	}
+	
 	public String getNombre() {
 		return nombre;
 	}

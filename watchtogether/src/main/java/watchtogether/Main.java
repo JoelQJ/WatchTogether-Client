@@ -5,7 +5,7 @@ public class Main {
 	
 	public static Player player;
 	public static Cliente cliente;
-	public static String version = "0.0.9";
+	public static String version = "0.0.10";
 	public static void main(String[] args) {
 		
 		player = new Player();

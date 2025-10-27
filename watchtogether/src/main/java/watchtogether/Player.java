@@ -42,11 +42,11 @@ import paquetes.tipos.PacketSetMedia;
 import paquetes.tipos.PacketSetTime;
 import paquetes.tipos.PacketTerminado;
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
-import uk.co.caprica.vlcj.media.AudioTrackInfo;
-import uk.co.caprica.vlcj.media.TextTrackInfo;
-import uk.co.caprica.vlcj.media.TrackInfo;
+import uk.co.caprica.vlcj.media.TrackType;
+import uk.co.caprica.vlcj.player.base.AudioTrack;
 import uk.co.caprica.vlcj.player.base.MediaPlayer;
 import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter;
+import uk.co.caprica.vlcj.player.base.TextTrack;
 import uk.co.caprica.vlcj.player.component.EmbeddedMediaPlayerComponent;
 import uk.co.caprica.vlcj.player.embedded.fullscreen.windows.Win32FullScreenStrategy;
 
@@ -118,7 +118,7 @@ public class Player {
 		volumenSlider.setFocusable(false);
 		pauseButton = new JButton("Play");
 		subtitleTrackSelector = new JComboBox<>();
-		Info infoCalcular = new Info(-99,"XXXXXXXXXXXXXXXXXXXXXXXXXXXXX","");
+		Info infoCalcular = new Info(-99,null,"XXXXXXXXXXXXXXXXXXXXXXXXXXXXX","");
 		subtitleTrackSelector.setPrototypeDisplayValue(infoCalcular);
 		audioTrackSelector = new JComboBox<>();
 		audioTrackSelector.setPrototypeDisplayValue(infoCalcular);
@@ -249,7 +249,7 @@ public class Player {
 				subtitleTrackSelector.addActionListener(ev -> {
 					Info selectedInfo = (Info) subtitleTrackSelector.getSelectedItem();
 					if (selectedInfo != null )
-						mediaPlayer.subpictures().setTrack(selectedInfo.getIndice());
+						mediaPlayer.tracks().selectTrack((selectedInfo.getTrack()));
 					
 						
 				});
@@ -257,7 +257,7 @@ public class Player {
 				audioTrackSelector.addActionListener(ev -> {
 					Info selectedAudio = (Info) audioTrackSelector.getSelectedItem();
 					if (selectedAudio != null)
-						mediaPlayer.audio().setTrack(selectedAudio.getIndice());
+						mediaPlayer.tracks().selectTrack(selectedAudio.getTrack());
 				});
 
 				// Actualizar la posición del video según la barra de tiempo
@@ -328,26 +328,26 @@ public class Player {
 
 
 	private void loadSubtitleTracks() {
-		List<? extends TrackInfo> tracks = mediaPlayer.media().info().tracks();
+		List<TextTrack> tracks = mediaPlayer.tracks().textTracks().tracks();
 		subtitleTrackSelector.removeAllItems();
 		System.out.println("\n[Player] Cargando Subtitulos...");
-		subtitleTrackSelector.addItem(new Info(-1, "Desactivar Subtitulos",""));
+		subtitleTrackSelector.addItem(new Info(-1, null, "Desactivar Subtitulos",""));
 		Info subLatinAmerican = null;
 		for (int i = 0; i < tracks.size(); i++) {
-			if (tracks.get(i) instanceof TextTrackInfo) {
-				TextTrackInfo track = (TextTrackInfo) tracks.get(i);
+			
+			TextTrack track = tracks.get(i);
 				String idioma = track.language() == null ? "" : track.language();
 				String description = track.description() == null ? idioma : track.description();
 				
 				if (description != null && !description.isEmpty()) {
-					Info texto = new Info(i, description, idioma);
+					Info texto = new Info(i, track, description, idioma);
 					subtitleTrackSelector.addItem(texto);
 					if(!description.toLowerCase().contains("commentary"))
 						if(subLatinAmerican == null && !description.toLowerCase().contains("forced") && comprobarIdiomaEnDesc(description, idioma, "latin","spa","european"))
 							subLatinAmerican = texto;
 					String debugTexto = subLatinAmerican == texto ? String.format("%s <-- Elegido como Subtitulo", texto.debug()) : texto.debug();
 					System.out.println(debugTexto);
-				}
+				
 			}
 			
 		}
@@ -356,10 +356,10 @@ public class Player {
 		if (subtitleTrackSelector.getItemCount() > 0) {
 			if (subLatinAmerican != null) {
 				subtitleTrackSelector.setSelectedItem(subLatinAmerican);
-				mediaPlayer.subpictures().setTrack(subLatinAmerican.getIndice());
+				mediaPlayer.tracks().selectTrack(subLatinAmerican.getTrack());
 			} else {
 				subtitleTrackSelector.setSelectedIndex(0);
-				mediaPlayer.subpictures().setTrack(0);
+				mediaPlayer.tracks().select(TrackType.TEXT,"0");
 			}
 		}
 	}
@@ -370,37 +370,36 @@ public class Player {
 	}
 
 	private void loadAudioTracks() {
-		List<? extends TrackInfo> tracks = mediaPlayer.media().info().tracks();
+		List<AudioTrack> tracks = mediaPlayer.tracks().audioTracks().tracks();
 		audioTrackSelector.removeAllItems();
 		Info audioJapones = null;
 		System.out.println("[Player] Cargando Audios...");
 		for (int i = 0; i < tracks.size(); i++) {
-			if (tracks.get(i) instanceof AudioTrackInfo) {
-				AudioTrackInfo track = (AudioTrackInfo) tracks.get(i);
-				String idioma = track.language() == null ? "" : track.language();
-				String description = track.description() == null || track.description().isEmpty() ? idioma : track.description();
-				if (description != null && !description.isEmpty()) {
-					Info audio = new Info(i, description, idioma);
-					audioTrackSelector.addItem(audio);
-					if(!description.toLowerCase().contains("commentary"))
-						if(comprobarIdiomaEnDesc(description, idioma, "ja", "jpn")){
-							audioJapones = audio;
-							audioJapones.setNombre("Japonés - 日本語");
-						}
-					
-					String debugTexto = audioJapones == audio ? String.format("%s <-- Elegido como Audio", audio.debug()) : audio.debug();
-					System.out.println(debugTexto);
-				}
+			AudioTrack track =  tracks.get(i);
+			String idioma = track.language() == null ? "" : track.language();
+			String description = track.description() == null || track.description().isEmpty() ? idioma : track.description();
+			if (description != null && !description.isEmpty()) {
+				Info audio = new Info(i, track, description, idioma);
+				audioTrackSelector.addItem(audio);
+				if(!description.toLowerCase().contains("commentary"))
+					if(comprobarIdiomaEnDesc(description, idioma, "ja", "jpn")){
+						audioJapones = audio;
+						audioJapones.setNombre("Japonés - 日本語");
+					}
+				
+				String debugTexto = audioJapones == audio ? String.format("%s <-- Elegido como Audio", audio.debug()) : audio.debug();
+				System.out.println(debugTexto);
+				
 			}
 		}
 		System.out.println("\n");
 		if (audioTrackSelector.getItemCount() > 0) {
 			if (audioJapones != null) {
 				audioTrackSelector.setSelectedItem(audioJapones);
-				mediaPlayer.audio().setTrack(audioJapones.getIndice());
+				mediaPlayer.tracks().selectTrack(audioJapones.getTrack());
 			} else {
 				audioTrackSelector.setSelectedIndex(0);
-				mediaPlayer.audio().setTrack(0);
+				mediaPlayer.tracks().select(TrackType.AUDIO, "0");
 			}
 		}
 	}

@@ -1,0 +1,76 @@
+plugins {
+    // Apply the application plugin to add support for building a CLI application in Java.
+	id 'java'
+	id 'eclipse'
+    id 'idea'
+    id 'application'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    
+}
+
+repositories {
+    // Use Maven Central for resolving dependencies.
+    mavenCentral()
+
+}
+
+dependencies {
+    compileOnly fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(dir: 'depend', include: ['*.jar'])
+    
+    // JSON library
+    implementation 'org.json:json:20240303'
+    implementation 'uk.co.caprica:vlcj:5.0.0-M4'
+
+}
+
+// Apply a specific Java toolchain to ease working on different environments.
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(project.property('java.version'))
+    }
+}
+
+jar {
+    archiveBaseName.set(project.name)
+    archiveVersion.set(project.version)
+    manifest {
+        attributes 'Main-Class': project.property('mainclass')
+    }
+}
+
+
+shadowJar {
+    archiveClassifier.set('')
+
+    exclude { FileTreeElement element ->
+        def f = element.file
+        f != null && f.path.replace('\\', '/').contains('/libs/') && f.name.endsWith('.jar')
+    }
+}
+
+
+application {
+    mainClass = project.property('mainclass')
+    applicationDefaultJvmArgs = ['-Dfile.encoding=UTF-8'] 
+}
+
+tasks.run.configure {
+	def runDir = file('run')
+    doFirst {
+        if (!runDir.exists()) {
+            runDir.mkdirs()
+        }
+    }
+    workingDir = runDir
+}
+
+tasks.named('build') {
+    // Borra todas las acciones y dependencias originales
+    doFirst {}
+    doLast {}
+    dependsOn shadowJar
+
+    // Limpiar otras dependencias
+    setDependsOn([shadowJar])
+}

@@ -1,11 +1,11 @@
-package watchtogether;
+package com.github.joelqj.watchtogether;
 
-public class Main {
+public class WatchTogetherMain {
 
 	
 	public static Player player;
 	public static Cliente cliente;
-	public static String version = "0.0.10";
+	public static String version = "0.0.11-vlc4.x";
 	public static void main(String[] args) {
 		
 		player = new Player();

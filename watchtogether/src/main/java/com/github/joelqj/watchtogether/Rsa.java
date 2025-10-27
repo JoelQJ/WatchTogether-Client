@@ -1,4 +1,4 @@
-package watchtogether;
+package com.github.joelqj.watchtogether;
 
 
 import java.security.KeyFactory;

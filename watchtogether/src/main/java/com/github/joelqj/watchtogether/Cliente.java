@@ -1,4 +1,4 @@
-package watchtogether;
+package com.github.joelqj.watchtogether;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -9,8 +9,8 @@ import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import paquetes.PacketDispacher;
-import paquetes.tipos.PacketPing;
+import com.github.joelqj.watchtogether.paquetes.PacketDispacher;
+import com.github.joelqj.watchtogether.paquetes.tipos.PacketPing;
 
 public class Cliente {
 

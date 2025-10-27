@@ -1,4 +1,4 @@
-package watchtogether;
+package com.github.joelqj.watchtogether;
 
 import uk.co.caprica.vlcj.player.base.Track;
 

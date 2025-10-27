@@ -1,4 +1,4 @@
-package watchtogether;
+package com.github.joelqj.watchtogether;
 
 import java.awt.BorderLayout;
 import java.awt.Canvas;
@@ -36,23 +36,26 @@ import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import paquetes.SliderConEstilo;
-import paquetes.tipos.PacketPause;
-import paquetes.tipos.PacketSetMedia;
-import paquetes.tipos.PacketSetTime;
-import paquetes.tipos.PacketTerminado;
+import com.github.joelqj.watchtogether.paquetes.SliderConEstilo;
+import com.github.joelqj.watchtogether.paquetes.tipos.PacketPause;
+import com.github.joelqj.watchtogether.paquetes.tipos.PacketSetMedia;
+import com.github.joelqj.watchtogether.paquetes.tipos.PacketSetTime;
+import com.github.joelqj.watchtogether.paquetes.tipos.PacketTerminado;
+
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
 import uk.co.caprica.vlcj.media.TrackType;
 import uk.co.caprica.vlcj.player.base.AudioTrack;
 import uk.co.caprica.vlcj.player.base.MediaPlayer;
 import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter;
 import uk.co.caprica.vlcj.player.base.TextTrack;
+import uk.co.caprica.vlcj.player.base.TrackApi;
 import uk.co.caprica.vlcj.player.component.EmbeddedMediaPlayerComponent;
 import uk.co.caprica.vlcj.player.embedded.fullscreen.windows.Win32FullScreenStrategy;
 
 public class Player {
 
 	private JFrame frame;
+	private MediaPlayerFactory mediaPlayerFactory;
 	private EmbeddedMediaPlayerComponent mediaPlayerComponent;
 	private JSlider timeSlider;
 	private JSlider volumenSlider;
@@ -66,7 +69,7 @@ public class Player {
 	private Timer stopTimer;
 	private boolean pause = false;
 	private JComponent[] componentesADesactivar;;
-
+	
 	public Player() {
 		initializeFrame();
 		initializeComponents();
@@ -80,15 +83,15 @@ public class Player {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		frame = new JFrame("Hiiragi Utena comparte anime " + Main.version);
+		frame = new JFrame("Hiiragi Utena comparte anime " + WatchTogetherMain.version);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setSize(1300, 600);
-		frame.setIconImage(new ImageIcon(Main.class.getResource("/utena.png")).getImage());
+		frame.setIconImage(new ImageIcon(WatchTogetherMain.class.getResource("/utena.png")).getImage());
 
 	}
 
 	private void initializeComponents() {
-		MediaPlayerFactory mediaPlayerFactory = new MediaPlayerFactory();
+		mediaPlayerFactory = new MediaPlayerFactory();
 		mediaPlayerComponent = new EmbeddedMediaPlayerComponent(mediaPlayerFactory, new Canvas(), // Video surface
 																									// component
 				new Win32FullScreenStrategy(frame), // Full screen strategy
@@ -203,7 +206,7 @@ public class Player {
 				mediaPlayer.audio().setVolume(volumenSlider.getValue());
 
 				pauseButton.addActionListener(ev -> {
-					Main.cliente.enviarPaquete(new PacketPause(!pause).toString());
+					WatchTogetherMain.cliente.enviarPaquete(new PacketPause(!pause).toString());
 					setPausar(!pause);
 
 				});
@@ -212,7 +215,7 @@ public class Player {
 
 					@Override
 					public void finished(MediaPlayer mediaPlayer) {
-						Main.cliente.enviarPaquete(new PacketTerminado().toString());
+						WatchTogetherMain.cliente.enviarPaquete(new PacketTerminado().toString());
 					}
 					
 					@Override
@@ -242,22 +245,30 @@ public class Player {
 						setTime(0);
 						volumenSlider.repaint();
 						mediaPlayer.audio().setVolume(volumenSlider.getValue());
-						Main.cliente.enviarPaquete(new PacketSetMedia().toString());
+						WatchTogetherMain.cliente.enviarPaquete(new PacketSetMedia().toString());
 					}
 				});
 
 				subtitleTrackSelector.addActionListener(ev -> {
 					Info selectedInfo = (Info) subtitleTrackSelector.getSelectedItem();
-					if (selectedInfo != null )
-						mediaPlayer.tracks().selectTrack((selectedInfo.getTrack()));
+					TrackApi tracks = mediaPlayer.tracks();
+					if (tracks != null && selectedInfo != null) {
+						if( selectedInfo.getTrack() != null)
+							tracks.selectTrack((selectedInfo.getTrack()));
+						else tracks.select(TrackType.TEXT, "0");
+					}
 					
 						
 				});
 
 				audioTrackSelector.addActionListener(ev -> {
 					Info selectedAudio = (Info) audioTrackSelector.getSelectedItem();
-					if (selectedAudio != null)
-						mediaPlayer.tracks().selectTrack(selectedAudio.getTrack());
+					TrackApi tracks = mediaPlayer.tracks();
+					if (tracks != null && selectedAudio != null) {
+						if( selectedAudio.getTrack() != null)
+							tracks.selectTrack((selectedAudio.getTrack()));
+						else tracks.select(TrackType.AUDIO, "0");
+					}
 				});
 
 				// Actualizar la posición del video según la barra de tiempo
@@ -270,7 +281,7 @@ public class Player {
 								if (length > 0) {
 									long newTime = timeSlider.getValue();
 									mediaPlayer.controls().setTime(newTime);
-									Main.cliente.enviarPaquete(new PacketSetTime(newTime).toString());
+									WatchTogetherMain.cliente.enviarPaquete(new PacketSetTime(newTime).toString());
 									timeSlider.setFocusable(false);
 									timeSlider.setFocusable(true);
 								}

@@ -1,9 +1,9 @@
-package paquetes.tipos;
+package com.github.joelqj.watchtogether.paquetes.tipos;
 
 import org.json.JSONObject;
 
-import watchtogether.Cliente;
-import watchtogether.Main;
+import com.github.joelqj.watchtogether.Cliente;
+import com.github.joelqj.watchtogether.WatchTogetherMain;
 
 public class PacketSetMedia extends Packet {
 	
@@ -15,7 +15,7 @@ public class PacketSetMedia extends Packet {
 	@Override
 	public void handleData(JSONObject data, Cliente reproductor) {
 	
-		Main.player.setMedia(data.getString("path").replace("%ip%", reproductor.ip()));
+		WatchTogetherMain.player.setMedia(data.getString("path").replace("%ip%", reproductor.ip()));
 	}
 
 	

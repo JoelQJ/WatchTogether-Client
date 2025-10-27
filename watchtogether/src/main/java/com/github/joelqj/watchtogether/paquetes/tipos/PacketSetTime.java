@@ -1,9 +1,9 @@
-package paquetes.tipos;
+package com.github.joelqj.watchtogether.paquetes.tipos;
 
 import org.json.JSONObject;
 
-import watchtogether.Cliente;
-import watchtogether.Main;
+import com.github.joelqj.watchtogether.Cliente;
+import com.github.joelqj.watchtogether.WatchTogetherMain;
 
 public class PacketSetTime extends Packet {
 
@@ -22,7 +22,7 @@ private Long time;
 	@Override
 	public void handleData(JSONObject data, Cliente reproductor) {
 	
-		Main.player.setTime(data.getLong("time"));
+		WatchTogetherMain.player.setTime(data.getLong("time"));
 	}
 
 	

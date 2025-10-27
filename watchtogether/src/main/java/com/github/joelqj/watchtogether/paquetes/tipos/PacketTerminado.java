@@ -1,9 +1,9 @@
-package paquetes.tipos;
+package com.github.joelqj.watchtogether.paquetes.tipos;
 
 import org.json.JSONObject;
 
-import watchtogether.Cliente;
-import watchtogether.Main;
+import com.github.joelqj.watchtogether.Cliente;
+import com.github.joelqj.watchtogether.WatchTogetherMain;
 
 public class PacketTerminado extends Packet {
 	
@@ -16,7 +16,7 @@ public class PacketTerminado extends Packet {
 	
 	@Override
 	public void handleData(JSONObject data, Cliente reproductor) {
-		Main.player.terminar();
+		WatchTogetherMain.player.terminar();
 	}
 
 	

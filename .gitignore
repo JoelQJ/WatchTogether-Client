@@ -5,10 +5,18 @@ watchtogether/.project
 /watchtogether/target
 /watchtogetherserver/target
 /watchtogetherserver/.settings
-watchtogetherserver/.project
+/watchtogetherserver/.project
 /watchtogetherautoupdater/.settings
 /watchtogetherautoupdater/bin
 watchtogetherautoupdater/Utena comparte.exe
 watchtogetherautoupdater/version.txt
 watchtogetherautoupdater/log.txt
 watchtogetherautoupdater/.project
+/watchtogether/bin/
+/watchtogether/pruebas/
+/watchtogether/.classpath
+/watchtogether/.project
+/watchtogether/.settings
+/watchtogether/.gradle/
+/watchtogether/build/
+/watchtogether/run/

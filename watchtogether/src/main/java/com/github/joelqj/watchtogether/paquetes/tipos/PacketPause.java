@@ -1,9 +1,9 @@
-package paquetes.tipos;
+package com.github.joelqj.watchtogether.paquetes.tipos;
 
 import org.json.JSONObject;
 
-import watchtogether.Cliente;
-import watchtogether.Main;
+import com.github.joelqj.watchtogether.Cliente;
+import com.github.joelqj.watchtogether.WatchTogetherMain;
 
 public class PacketPause extends Packet {
 
@@ -21,7 +21,7 @@ public class PacketPause extends Packet {
 	@Override
 	public void handleData(JSONObject data, Cliente reproductor) {
 	
-		Main.player.setPausar(data.getBoolean("pause"));
+		WatchTogetherMain.player.setPausar(data.getBoolean("pause"));
 	}
 
 	

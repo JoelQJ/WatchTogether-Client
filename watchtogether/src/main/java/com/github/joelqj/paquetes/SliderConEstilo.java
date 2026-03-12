@@ -1,4 +1,4 @@
-package paquetes;
+package com.github.joelqj.paquetes;
 
 import java.awt.Color;
 import java.awt.Dimension;

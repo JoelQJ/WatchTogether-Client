@@ -1,4 +1,4 @@
-package paquetes;
+package com.github.joelqj.paquetes;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -6,15 +6,15 @@ import java.util.function.Supplier;
 
 import org.json.JSONObject;
 
-import paquetes.tipos.IPacket;
-import paquetes.tipos.Packet;
-import paquetes.tipos.PacketPause;
-import paquetes.tipos.PacketPing;
-import paquetes.tipos.PacketSetMedia;
-import paquetes.tipos.PacketSetTime;
-import paquetes.tipos.PacketStartMedia;
-import paquetes.tipos.PacketTerminado;
-import watchtogether.Cliente;
+import com.github.joelqj.paquetes.tipos.IPacket;
+import com.github.joelqj.paquetes.tipos.Packet;
+import com.github.joelqj.paquetes.tipos.PacketPause;
+import com.github.joelqj.paquetes.tipos.PacketPing;
+import com.github.joelqj.paquetes.tipos.PacketSetMedia;
+import com.github.joelqj.paquetes.tipos.PacketSetTime;
+import com.github.joelqj.paquetes.tipos.PacketStartMedia;
+import com.github.joelqj.paquetes.tipos.PacketTerminado;
+import com.github.joelqj.watchtogether.Cliente;
 
 public class PacketDispacher {
 

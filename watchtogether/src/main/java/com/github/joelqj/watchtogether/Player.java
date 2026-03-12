@@ -1,4 +1,4 @@
-package watchtogether;
+package com.github.joelqj.watchtogether;
 
 import java.awt.BorderLayout;
 import java.awt.Canvas;
@@ -36,11 +36,11 @@ import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import paquetes.SliderConEstilo;
-import paquetes.tipos.PacketPause;
-import paquetes.tipos.PacketSetMedia;
-import paquetes.tipos.PacketSetTime;
-import paquetes.tipos.PacketTerminado;
+import com.github.joelqj.paquetes.SliderConEstilo;
+import com.github.joelqj.paquetes.tipos.PacketPause;
+import com.github.joelqj.paquetes.tipos.PacketSetMedia;
+import com.github.joelqj.paquetes.tipos.PacketSetTime;
+import com.github.joelqj.paquetes.tipos.PacketTerminado;
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
 import uk.co.caprica.vlcj.media.AudioTrackInfo;
 import uk.co.caprica.vlcj.media.TextTrackInfo;
@@ -49,6 +49,7 @@ import uk.co.caprica.vlcj.player.base.MediaPlayer;
 import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter;
 import uk.co.caprica.vlcj.player.component.EmbeddedMediaPlayerComponent;
 import uk.co.caprica.vlcj.player.embedded.fullscreen.windows.Win32FullScreenStrategy;
+import uk.co.caprica.vlcj.player.embedded.fullscreen.x.XFullScreenStrategy;
 
 public class Player {
 
@@ -91,7 +92,7 @@ public class Player {
 		MediaPlayerFactory mediaPlayerFactory = new MediaPlayerFactory();
 		mediaPlayerComponent = new EmbeddedMediaPlayerComponent(mediaPlayerFactory, new Canvas(), // Video surface
 																									// component
-				new Win32FullScreenStrategy(frame), // Full screen strategy
+				new XFullScreenStrategy(frame), // Full screen strategy
 				null, // Input events (use default)
 				null // Overlay
 		);
@@ -127,7 +128,7 @@ public class Player {
 		tiempo = new JLabel();
 
 		componentesADesactivar = new JComponent[] {pauseButton, timeSlider};
-		
+
 		stopTimer = new Timer(1000 * 10, new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -214,7 +215,7 @@ public class Player {
 					public void finished(MediaPlayer mediaPlayer) {
 						Main.cliente.enviarPaquete(new PacketTerminado().toString());
 					}
-					
+
 					@Override
 					public void timeChanged(MediaPlayer mediaPlayer, long newTime) {
 						SwingUtilities.invokeLater(() -> {
@@ -250,8 +251,8 @@ public class Player {
 					Info selectedInfo = (Info) subtitleTrackSelector.getSelectedItem();
 					if (selectedInfo != null )
 						mediaPlayer.subpictures().setTrack(selectedInfo.getIndice());
-					
-						
+
+
 				});
 
 				audioTrackSelector.addActionListener(ev -> {
@@ -294,7 +295,7 @@ public class Player {
 		setPlayPrimeraVez();
 		setTime(mediaPlayer.status().length()-10);
 	}
-	
+
 	public void setPausar(boolean pausar) {
 		SwingUtilities.invokeLater(() -> {
 			mediaPlayer.controls().setPause(pausar);
@@ -305,16 +306,16 @@ public class Player {
 				pauseButton.setText("Play");
 		});
 	}
-	
+
 	public void setPlayPrimeraVez() {
 		setPausar(false);
 		for(JComponent componente : componentesADesactivar) {
 			componente.setEnabled(true);
 			componente.setToolTipText(null);
 		}
-		
+
 	}
-	
+
 	public void setMedia(String path) {
 		SwingUtilities.invokeLater(() -> {
 			mediaPlayer.media().play(path);
@@ -338,7 +339,7 @@ public class Player {
 				TextTrackInfo track = (TextTrackInfo) tracks.get(i);
 				String idioma = track.language() == null ? "" : track.language();
 				String description = track.description() == null ? idioma : track.description();
-				
+
 				if (description != null && !description.isEmpty()) {
 					Info texto = new Info(i, description, idioma);
 					subtitleTrackSelector.addItem(texto);
@@ -349,10 +350,10 @@ public class Player {
 					System.out.println(debugTexto);
 				}
 			}
-			
+
 		}
 		System.out.println("\n");
-		
+
 		if (subtitleTrackSelector.getItemCount() > 0) {
 			if (subLatinAmerican != null) {
 				subtitleTrackSelector.setSelectedItem(subLatinAmerican);
@@ -387,7 +388,7 @@ public class Player {
 							audioJapones = audio;
 							audioJapones.setNombre("Japonés - 日本語");
 						}
-					
+
 					String debugTexto = audioJapones == audio ? String.format("%s <-- Elegido como Audio", audio.debug()) : audio.debug();
 					System.out.println(debugTexto);
 				}
@@ -413,16 +414,7 @@ public class Player {
 	}
 
 	private void toggleFullScreen() {
-		if (isFullScreen) {
-			mediaPlayerComponent.mediaPlayer().fullScreen().set(false);
-			// frame.setUndecorated(false);
-			frame.setResizable(true);
-			frame.setVisible(true);
-		} else {
-			// frame.setUndecorated(true);
-			frame.setResizable(false);
-			mediaPlayerComponent.mediaPlayer().fullScreen().set(true);
-		}
+        mediaPlayerComponent.mediaPlayer().fullScreen().set(!isFullScreen);
 		isFullScreen = !isFullScreen;
 	}
 

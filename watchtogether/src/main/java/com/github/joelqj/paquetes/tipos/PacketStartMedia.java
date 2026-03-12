@@ -1,9 +1,9 @@
-package paquetes.tipos;
+package com.github.joelqj.paquetes.tipos;
 
 import org.json.JSONObject;
 
-import watchtogether.Cliente;
-import watchtogether.Main;
+import com.github.joelqj.watchtogether.Cliente;
+import com.github.joelqj.watchtogether.Main;
 
 public class PacketStartMedia extends Packet {
 	

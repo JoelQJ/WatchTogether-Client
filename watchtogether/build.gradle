@@ -20,7 +20,7 @@ dependencies {
     
     // JSON library
     implementation 'org.json:json:20240303'
-    implementation 'uk.co.caprica:vlcj:4.7.1'
+    implementation 'uk.co.caprica:vlcj:4.12.1'
 
 }
 

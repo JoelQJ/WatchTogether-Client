@@ -37,10 +37,10 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import com.github.joelqj.paquetes.SliderConEstilo;
-import com.github.joelqj.paquetes.tipos.PacketPause;
-import com.github.joelqj.paquetes.tipos.PacketSetMedia;
-import com.github.joelqj.paquetes.tipos.PacketSetTime;
-import com.github.joelqj.paquetes.tipos.PacketTerminado;
+import com.github.joelqj.paquetes.tipos.PlayPausePacket;
+import com.github.joelqj.paquetes.tipos.SetTimePacket;
+import com.github.joelqj.paquetes.tipos.VideoFinishedPacket;
+import com.github.joelqj.paquetes.tipos.VideoLoadedPacket;
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
 import uk.co.caprica.vlcj.media.AudioTrackInfo;
 import uk.co.caprica.vlcj.media.TextTrackInfo;
@@ -48,8 +48,9 @@ import uk.co.caprica.vlcj.media.TrackInfo;
 import uk.co.caprica.vlcj.player.base.MediaPlayer;
 import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter;
 import uk.co.caprica.vlcj.player.component.EmbeddedMediaPlayerComponent;
-import uk.co.caprica.vlcj.player.embedded.fullscreen.windows.Win32FullScreenStrategy;
+import uk.co.caprica.vlcj.player.embedded.fullscreen.FullScreenStrategy;
 import uk.co.caprica.vlcj.player.embedded.fullscreen.x.XFullScreenStrategy;
+
 
 public class Player {
 
@@ -62,7 +63,7 @@ public class Player {
 	private JComboBox<Info> audioTrackSelector;
 	private JLabel tiempo;
 	private MediaPlayer mediaPlayer;
-	private boolean isFullScreen = false;
+	private FullScreenStrategy fullScreenStrategy;
 	private JPanel controlsPanel;
 	private Timer stopTimer;
 	private boolean pause = false;
@@ -89,15 +90,17 @@ public class Player {
 	}
 
 	private void initializeComponents() {
-		MediaPlayerFactory mediaPlayerFactory = new MediaPlayerFactory();
-		mediaPlayerComponent = new EmbeddedMediaPlayerComponent(mediaPlayerFactory, new Canvas(), // Video surface
-																									// component
-				new XFullScreenStrategy(frame), // Full screen strategy
-				null, // Input events (use default)
-				null // Overlay
+		MediaPlayerFactory mediaPlayerFactory = new MediaPlayerFactory("--avcodec-hw=none");
+		fullScreenStrategy = new XFullScreenStrategy(frame);
+		mediaPlayerComponent = new EmbeddedMediaPlayerComponent(mediaPlayerFactory, new Canvas(),
+				fullScreenStrategy,
+				null,
+				null
 		);
 
-		controlsPanel = new JPanel(new BorderLayout()); // Change layout to BorderLayout
+		mediaPlayer = mediaPlayerComponent.mediaPlayer();
+
+		controlsPanel = new JPanel(new BorderLayout());
 		timeSlider = new SliderConEstilo(0, 100, 0);
 		timeSlider.setPreferredSize(new Dimension(1000, 20));
 		timeSlider.setPaintLabels(true);
@@ -171,8 +174,8 @@ public class Player {
 		downPanel.add(audioTrackSelector);
 		downPanel.add(tiempo);
 		downPanel.add(volumenSlider);
-		controlsPanel.add(timeSlider, BorderLayout.NORTH); // Add top panel to north
-		controlsPanel.add(downPanel, BorderLayout.SOUTH); // Add slider to south
+		controlsPanel.add(timeSlider, BorderLayout.NORTH);
+		controlsPanel.add(downPanel, BorderLayout.SOUTH);
 
 		frame.revalidate();
 	}
@@ -197,96 +200,104 @@ public class Player {
 		mediaPlayerComponent.videoSurfaceComponent().addMouseMotionListener(mouseEvent);
 		frame.addMouseMotionListener(mouseEvent);
 
-		frame.addComponentListener(new ComponentAdapter() {
+		mediaPlayerComponent.videoSurfaceComponent().addMouseListener(new java.awt.event.MouseAdapter() {
 			@Override
-			public void componentShown(ComponentEvent e) {
-				mediaPlayer = mediaPlayerComponent.mediaPlayer();
-				mediaPlayer.audio().setVolume(volumenSlider.getValue());
+			public void mouseClicked(MouseEvent e) {
+				if (e.getClickCount() == 2)
+					toggleFullScreen();
+			}
+		});
 
-				pauseButton.addActionListener(ev -> {
-					Main.cliente.enviarPaquete(new PacketPause(!pause).toString());
-					setPausar(!pause);
+		frame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+				.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "exitFullScreen");
+		frame.getRootPane().getActionMap().put("exitFullScreen", new AbstractAction() {
+			private static final long serialVersionUID = 1L;
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (fullScreenStrategy.isFullScreenMode()) toggleFullScreen();
+			}
+		});
 
-				});
+		SwingUtilities.invokeLater(() -> {
+			mediaPlayer.audio().setVolume(volumenSlider.getValue());
 
-				mediaPlayer.events().addMediaPlayerEventListener(new MediaPlayerEventAdapter() {
+			pauseButton.addActionListener(ev -> {
+				Main.cliente.sendPacket(new PlayPausePacket(pause));
+				setPausar(!pause);
+			});
 
-					@Override
-					public void finished(MediaPlayer mediaPlayer) {
-						Main.cliente.enviarPaquete(new PacketTerminado().toString());
-					}
+			mediaPlayer.events().addMediaPlayerEventListener(new MediaPlayerEventAdapter() {
 
-					@Override
-					public void timeChanged(MediaPlayer mediaPlayer, long newTime) {
-						SwingUtilities.invokeLater(() -> {
+				@Override
+				public void finished(MediaPlayer mediaPlayer) {
+					Main.cliente.sendPacket(new VideoFinishedPacket());
+				}
+
+				@Override
+				public void timeChanged(MediaPlayer mediaPlayer, long newTime) {
+					SwingUtilities.invokeLater(() -> {
+						long length = mediaPlayer.status().length();
+						if (length > 0) {
+							if (!timeSlider.hasFocus())
+								timeSlider.setValue((int) newTime);
+
+							if (controlsPanel.isVisible()) {
+								int segundos = (int) (mediaPlayer.status().time() / 1000);
+								tiempo.setText(String.format("%02d:%02d:%02d", (segundos / 3600),
+										(segundos % 3600) / 60, segundos % 60));
+							}
+						}
+					});
+				}
+
+				@Override
+				public void mediaPlayerReady(MediaPlayer mediaPlayer) {
+					loadSubtitleTracks();
+					loadAudioTracks();
+					setupSlider();
+					controlsPanel.updateUI();
+					volumenSlider.repaint();
+					mediaPlayer.audio().setVolume(volumenSlider.getValue());
+					Main.cliente.sendPacket(new VideoLoadedPacket());
+				}
+			});
+
+			subtitleTrackSelector.addActionListener(ev -> {
+				Info selectedInfo = (Info) subtitleTrackSelector.getSelectedItem();
+				if (selectedInfo != null )
+					mediaPlayer.subpictures().setTrack(selectedInfo.getIndice());
+
+
+			});
+
+			audioTrackSelector.addActionListener(ev -> {
+				Info selectedAudio = (Info) audioTrackSelector.getSelectedItem();
+				if (selectedAudio != null)
+					mediaPlayer.audio().setTrack(selectedAudio.getIndice());
+			});
+
+			timeSlider.addChangeListener(new ChangeListener() {
+				@Override
+				public void stateChanged(ChangeEvent e) {
+					SwingUtilities.invokeLater(() -> {
+						if (!timeSlider.getValueIsAdjusting() && timeSlider.hasFocus()) {
 							long length = mediaPlayer.status().length();
 							if (length > 0) {
-								if (!timeSlider.hasFocus())
-									timeSlider.setValue((int) newTime);
-
-								if (controlsPanel.isVisible()) {
-									int segundos = (int) (mediaPlayer.status().time() / 1000);
-									tiempo.setText(String.format("%02d:%02d:%02d", (segundos / 3600),
-											(segundos % 3600) / 60, segundos % 60));
-								}
+								long newTime = timeSlider.getValue();
+								mediaPlayer.controls().setTime(newTime);
+								Main.cliente.sendPacket(new SetTimePacket(newTime / 1000.0));
+								timeSlider.setFocusable(false);
+								timeSlider.setFocusable(true);
 							}
-						});
-					}
+						}
+					});
+				}
+			});
 
-					@Override
-					public void mediaPlayerReady(MediaPlayer mediaPlayer) {
-						loadSubtitleTracks();
-						loadAudioTracks();
-						setupSlider();
-						controlsPanel.updateUI();
-						setPausar(true);
-						setTime(0);
-						volumenSlider.repaint();
-						mediaPlayer.audio().setVolume(volumenSlider.getValue());
-						Main.cliente.enviarPaquete(new PacketSetMedia().toString());
-					}
-				});
-
-				subtitleTrackSelector.addActionListener(ev -> {
-					Info selectedInfo = (Info) subtitleTrackSelector.getSelectedItem();
-					if (selectedInfo != null )
-						mediaPlayer.subpictures().setTrack(selectedInfo.getIndice());
-
-
-				});
-
-				audioTrackSelector.addActionListener(ev -> {
-					Info selectedAudio = (Info) audioTrackSelector.getSelectedItem();
-					if (selectedAudio != null)
-						mediaPlayer.audio().setTrack(selectedAudio.getIndice());
-				});
-
-				// Actualizar la posición del video según la barra de tiempo
-				timeSlider.addChangeListener(new ChangeListener() {
-					@Override
-					public void stateChanged(ChangeEvent e) {
-						SwingUtilities.invokeLater(() -> {
-							if (!timeSlider.getValueIsAdjusting() && timeSlider.hasFocus()) {
-								long length = mediaPlayer.status().length();
-								if (length > 0) {
-									long newTime = timeSlider.getValue();
-									mediaPlayer.controls().setTime(newTime);
-									Main.cliente.enviarPaquete(new PacketSetTime(newTime).toString());
-									timeSlider.setFocusable(false);
-									timeSlider.setFocusable(true);
-								}
-							}
-						});
-					}
-				});
-
-				volumenSlider.addChangeListener((change) -> {
-
-					mediaPlayer.audio().setVolume(volumenSlider.getValue());
-					volumenSlider.setToolTipText(volumenSlider.getValue() + "%");
-
-				});
-			}
+			volumenSlider.addChangeListener((change) -> {
+				mediaPlayer.audio().setVolume(volumenSlider.getValue());
+				volumenSlider.setToolTipText(volumenSlider.getValue() + "%");
+			});
 		});
 
 	}
@@ -299,6 +310,9 @@ public class Player {
 	public void setPausar(boolean pausar) {
 		SwingUtilities.invokeLater(() -> {
 			mediaPlayer.controls().setPause(pausar);
+			if(!pausar){
+				setPlayPrimeraVez();
+			}
 			pause = pausar;
 			if (!pausar) {
 				pauseButton.setText("Pausar");
@@ -308,7 +322,6 @@ public class Player {
 	}
 
 	public void setPlayPrimeraVez() {
-		setPausar(false);
 		for(JComponent componente : componentesADesactivar) {
 			componente.setEnabled(true);
 			componente.setToolTipText(null);
@@ -414,8 +427,17 @@ public class Player {
 	}
 
 	private void toggleFullScreen() {
-        mediaPlayerComponent.mediaPlayer().fullScreen().set(!isFullScreen);
-		isFullScreen = !isFullScreen;
+		if (!fullScreenStrategy.isFullScreenMode()) {
+			mediaPlayerComponent.mediaPlayer().fullScreen().set(true);
+		} else {
+			mediaPlayerComponent.mediaPlayer().fullScreen().set(false);
+			SwingUtilities.invokeLater(() -> {
+				frame.setExtendedState(JFrame.NORMAL);
+				frame.setSize(1300, 600);
+				frame.setLocationRelativeTo(null);
+				frame.toFront();
+			});
+		}
 	}
 
 	public void setTime(long time) {

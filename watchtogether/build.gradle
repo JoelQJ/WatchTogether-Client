@@ -11,6 +11,7 @@ plugins {
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
+    maven { url 'https://maven.pyronixstudio.es/' }
 
 }
 
@@ -18,9 +19,8 @@ dependencies {
     compileOnly fileTree(dir: 'libs', include: ['*.jar'])
     implementation fileTree(dir: 'depend', include: ['*.jar'])
     
-    // JSON library
-    implementation 'org.json:json:20240303'
     implementation 'uk.co.caprica:vlcj:4.12.1'
+    implementation 'es.pyronixstudio:Util:0.0.18'
 
 }
 
